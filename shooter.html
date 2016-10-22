@@ -316,7 +316,7 @@ window.onload = function() {
     var numEnemies;
 
     var isBarrier = false;
-    var nextBarrierScore = 15000;
+    var nextBarrierScore = 12000;
     var barrierCount = 0;
 
     var keys = [];
@@ -381,7 +381,7 @@ window.onload = function() {
             numEnemies = 3;
             playerPoint = 0;
             isBarrier = false;
-            nextBarrierScore = 15000;
+            nextBarrierScore = 12000;
             break;
         case Status.toStart:
             myX = canvas.width/2;
@@ -591,7 +591,7 @@ window.onload = function() {
                ++barrierCount > 60 * 7) {
                 isBarrier = false;
                 barrierCount = 0;
-                nextBarrierScore += 15000 * (numEnemies - 3);
+                nextBarrierScore += 12000 * (numEnemies - 3);
             }
         }
 
