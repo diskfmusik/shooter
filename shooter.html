@@ -74,6 +74,16 @@ var myX, myY;
 
 var enemies;
 var scoreObj;
+var items;
+
+var itemFrame = 0;
+
+var FirstNextBr = 9000;
+var BarrierTime = 5; // (sec)
+
+var isBarrier = false;
+var nextBarrierScore = FirstNextBr;
+var barrierCount = 0;
 
 //---------------------------------------------------------
 //
@@ -102,6 +112,61 @@ function CircleBullet(bullets, num, x, y, range, w, h)
         var vy = h*Math.sin(th);
         bullets.push(CreateBullet(x, y, vx, vy, range));
     }
+}
+
+function Item(canvas) {
+
+    var isActive_ = true;
+
+    var x_, y_;
+    var vy;
+
+    var range = 20;
+
+    var time;
+
+    function spawn() {
+        x_ = canvas.width*Math.random();
+        y_ = -range;
+        vy = random_range(1, 4);
+        time = random_range(10, 30);
+    };
+    spawn();
+
+    this.draw = function(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = 'rgb(128, 255, 128)';
+        ctx.arc(x_, y_, range, 0, Math.PI*2, false);
+        ctx.fill();
+
+        ctx.font = '14pt Calibri';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var s = "Time";
+        ctx.fillText(s, x_, y_);
+    }
+
+    this.update = function() {
+        y_ += vy;
+    }
+
+    this.isActive = function() {
+        return isActive_;
+    }
+
+    this.isHit = function(x, y, r) {
+        var dx = x_ - x;
+        var dy = y_ - y;
+        var br = r;
+        if (dx*dx + dy*dy < (range + r)*(range + r)) {
+            isActive_ = false;
+            barrierCount -= time;
+
+            return true;
+        }
+    }
+
 }
 
 function Enemy(canvas) {
@@ -348,13 +413,9 @@ window.onload = function() {
     var explode = new Explode();
     var numEnemies;
 
-    var FirstNextBr = 9000;
-    //FirstNextBr = 1000; // debug
-    var BarrierTime = 5; // (sec)
+    FirstNextBr = 1000; // debug
 
-    var isBarrier = false;
-    var nextBarrierScore = FirstNextBr;
-    var barrierCount = 0;
+// ƒoƒŠƒAŽž -> bonus
 
     var difficult = 0;
 
@@ -412,6 +473,7 @@ window.onload = function() {
         var drawPlayer = false;
         var drawStatus = false;
         var drawScoreObj = false;
+        var drawItem = false;
 
         switch (status) {
         case Status.title:
@@ -426,6 +488,7 @@ window.onload = function() {
             myX = canvas.width/2;
             myY = 4*canvas.height/5;
             bullets = [];
+            items = [];
             init(canvas, numEnemies);
             status = Status.countDown;
             count = 3;
@@ -443,12 +506,14 @@ window.onload = function() {
             msg = "" + count;
             drawPlayer = true;
             drawStatus = true;
+            drawItem = true;
             break;
         case Status.inGame:
             drawEnemies = true;
             drawScoreObj = true;
             drawPlayer = true;
             drawStatus = true;
+            drawItem = true;
             break;
         case Status.gameClear:
             msg = 'GAME CLEAR!!!';
@@ -456,6 +521,7 @@ window.onload = function() {
             drawScoreObj = true;
             drawPlayer = true;
             drawStatus = true;
+            drawItem = true;
             break;
         case Status.dying:
             explode.draw(ctx, myX, myY);
@@ -466,12 +532,14 @@ window.onload = function() {
             drawEnemies = true;
             drawScoreObj = true;
             drawStatus = true;
+            drawItem = true;
             break;
         case Status.gameOver:
             msg = 'GAME OVER';
             drawEnemies = true;
             drawScoreObj = true;
             drawStatus = true;
+            drawItem = true;
             break;
         default:
             console.log('unknown status: ' + status);
@@ -528,11 +596,18 @@ window.onload = function() {
         }
 
 // barrier
-        if (isBarrier && drawPlayer) {
-            ctx.beginPath();
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-            ctx.arc(myX, myY, barrierR, 0, Math.PI*2, false);
-            ctx.fill();
+        if (isBarrier) {
+
+            if(++itemFrame % 30 == 0 && status == Status.inGame) {
+                items.push(new Item(canvas));
+            }
+
+            if(drawPlayer) {
+                ctx.beginPath();
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.arc(myX, myY, barrierR, 0, Math.PI*2, false);
+                ctx.fill();
+            }
         }
 
         drawEnemies && enemies.forEach(function(enemy) {
@@ -599,6 +674,18 @@ window.onload = function() {
                 bullet.inUse = false;
             }
         });
+
+
+        if(drawItem) {
+            items.forEach(function(item) {
+                item.update();
+                item.draw(ctx);
+                item.isHit(myX, myY, myR);
+            });
+            items = items.filter(function(item) {
+                return item.isActive();
+            });
+        }
 
 
         if(drawScoreObj) {
