@@ -315,8 +315,11 @@ window.onload = function() {
     var explode = new Explode();
     var numEnemies;
 
+    var FirstNextBr = 9000;
+    var BarrierTime = 5; // (sec)
+
     var isBarrier = false;
-    var nextBarrierScore = 12000;
+    var nextBarrierScore = FirstNextBr;
     var barrierCount = 0;
 
     var keys = [];
@@ -381,7 +384,7 @@ window.onload = function() {
             numEnemies = 3;
             playerPoint = 0;
             isBarrier = false;
-            nextBarrierScore = 12000;
+            nextBarrierScore = FirstNextBr;
             break;
         case Status.toStart:
             myX = canvas.width/2;
@@ -588,10 +591,10 @@ window.onload = function() {
         }
         else {
             if(status == Status.inGame &&
-               ++barrierCount > 60 * 7) {
+               ++barrierCount > 60 * BarrierTime) {
                 isBarrier = false;
                 barrierCount = 0;
-                nextBarrierScore += 12000 * (numEnemies - 3);
+                nextBarrierScore += (FirstNextBr) * (numEnemies - 2);
             }
         }
 
@@ -623,10 +626,17 @@ window.onload = function() {
                 ctx.fillStyle = 'white';
                 ctx.textAlign = 'left';
                 ctx.textBaseline = 'top';
-                var rest = 60 * 7 - barrierCount;
+                var rest = 60 * BarrierTime - barrierCount;
                 //var
-                var s = "( Barrier!! (" + rest + ") )";
+                var s = "( Barrier!! )";
                 ctx.fillText(s, 10, 30);
+
+                ctx.font = '18pt Calibri';
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                var s1 = '(' + rest + ')';
+                ctx.fillText(s1, myX, myY + 25);
             }
             else {
                 ctx.font = '18pt Calibri';
