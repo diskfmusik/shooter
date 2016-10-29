@@ -316,11 +316,14 @@ window.onload = function() {
     var numEnemies;
 
     var FirstNextBr = 9000;
+    //FirstNextBr = 1000; // debug
     var BarrierTime = 5; // (sec)
 
     var isBarrier = false;
     var nextBarrierScore = FirstNextBr;
     var barrierCount = 0;
+
+
 
     var keys = [];
     document.onkeydown = function(e) {
@@ -494,7 +497,7 @@ window.onload = function() {
 // barrier
         if (isBarrier && drawPlayer) {
             ctx.beginPath();
-            ctx.fillStyle = 'red';
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
             ctx.arc(myX, myY, barrierR, 0, Math.PI*2, false);
             ctx.fill();
         }
