@@ -115,9 +115,12 @@ function Enemy(canvas) {
 
     var bullets = [];
 
+    var moveType = 0;
+
     var er = 15; // enemy radius
     //var br = 5; // bullet radius
 
+    var count = 0;
     var frame;
     var fire_term;
 
@@ -129,6 +132,8 @@ function Enemy(canvas) {
         vy = 50*Math.random() + 50;
         frame = random_range(0, 120);
         fire_term = 120;
+        count = 0;
+        moveType = random_range(0, 1);
     };
     spawn();
 
@@ -228,9 +233,45 @@ function Enemy(canvas) {
     var lastTick;
     var th = Math.PI*Math.random();
 
+    this.move = function(dt) {
+
+        if (0 >= life) return;
+
+        if(moveType == 0)
+        {
+            x += dt*vx/1000;
+            x += lifeProp[life].daze*Math.sin(th);
+            th += 1.5*dt*2*Math.PI/1000;
+            y += dt*(vy+count)/1000;
+            if (x < -er
+            || canvas.width + er < x
+            || canvas.height + er < y
+            || y < -100)
+            {
+                spawn();
+            }
+        }
+        else if(moveType == 1)
+        {
+            x += dt*vx/1000;
+            x += lifeProp[life].daze*Math.sin(th);
+            th += 1.5*dt*2*Math.PI/1000;
+            y += dt*(vy+(100-count))/1000;
+            if (x < -er
+            || canvas.width + er < x
+            || canvas.height + er < y
+            || y < -100)
+            {
+                spawn();
+            }
+        }
+
+    }
+
     this.update = function() {
 
-        ++frame;
+        count += 1;
+        frame++;
 
         if (dying && !explode.update()) {
             dying = false;
@@ -242,17 +283,9 @@ function Enemy(canvas) {
 
         var tick = Date.now();
         var dt = tick - lastTick;
-        if (0 < life) {
-            x += dt*vx/1000;
-            x += lifeProp[life].daze*Math.sin(th);
-            th += 1.5*dt*2*Math.PI/1000;
-            y += dt*vy/1000;
-            if (x < -er
-            || canvas.width + er < x
-            || canvas.height + er < y) {
-                spawn();
-            }
-        }
+
+        this.move(dt);
+
         bullets.forEach(function(bullet) {
             bullet.x += dt*bullet.vx/1000;
             bullet.y += dt*bullet.vy/1000;
@@ -360,6 +393,10 @@ window.onload = function() {
         }
 
         if (keys[32 /*space*/] == 1) {
+            if (status == Status.title) {
+                status = Status.toStart;
+                muteSE = false;
+            }
             if (status == Status.gameOver) {
                 status = Status.title;
             }
@@ -370,27 +407,6 @@ window.onload = function() {
             keys[32]++; // pretend key repeat
         }
 
-        if(status == Status.title) {
-            if (keys[49 /* 1 */] == 1) {
-                FirstNextBr = 7500;
-                nextBarrierScore = FirstNextBr;
-                status = Status.toStart;
-                muteSE = false;
-            }
-            else if (keys[50 /* 2 */] == 1) {
-                FirstNextBr = 9000;
-                nextBarrierScore = FirstNextBr;
-                status = Status.toStart;
-                muteSE = false;
-            }
-            else if (keys[51 /* 3 */] == 1) {
-                FirstNextBr = 12000;
-                nextBarrierScore = FirstNextBr;
-                status = Status.toStart;
-                muteSE = false;
-            }
-        }
-
         var msg;
         var drawEnemies = false;
         var drawPlayer = false;
@@ -399,18 +415,8 @@ window.onload = function() {
 
         switch (status) {
         case Status.title:
-            ctx.font = '32pt Calibri';
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            var s1 = "Easy => Press '1'";
-            var s2 = "Normal => Press '2'";
-            var s3 = "Hard => Press '3'";
-            ctx.fillText(s1, canvas.width/2, canvas.height/2 - 100);
-            ctx.fillText(s2, canvas.width/2, canvas.height/2);
-            ctx.fillText(s3, canvas.width/2, canvas.height/2 + 100);
-
-//            msg = 'Press space to start';
+            msg = 'Press space to start';
+            numEnemies = 8;
             numEnemies = 3;
             playerPoint = 0;
             isBarrier = false;
