@@ -36,6 +36,7 @@ canvas {
 
 <script src="explode.js"></script>
 <script src="scoreObj.js"></script>
+<script src="util.js"></script>
 
 <script>
 
@@ -75,6 +76,7 @@ var myX, myY;
 var enemies;
 var scoreObj;
 var items;
+var boss;
 
 var itemFrame = 0;
 
@@ -85,18 +87,11 @@ var isBarrier = false;
 var nextBarrierScore = FirstNextBr;
 var barrierCount = 0;
 
+// 終着点 -> boss ?
+// 7ぐらいまで行ったら、ボスを出す
+
 //---------------------------------------------------------
 //
-
-function random_range(min, max)
-{
-    var r =  Math.floor( min + Math.random() * (max + 1) );
-//    console.log('min:' + min + ' max:' + max + ' r:' + r);
-    return r;
-}
-
-// 当たった時に、スコアの数字を出す
-// 敵を倒したら、アイテム
 
 function CreateBullet(x, y, vx, vy, range)
 {
@@ -114,29 +109,81 @@ function CircleBullet(bullets, num, x, y, range, w, h)
     }
 }
 
+function Boss(canvas) {
+
+    var x_ = canvas.width / 2;
+    var y_ = 150;
+
+    var range_ = 25;
+    var life = 3;
+
+    this.update = function() {
+
+    }
+
+    this.draw = function(ctx) {
+        ctx.beginPath();
+        ctx.fillStyle = 'red';
+        ctx.moveTo(x_ - 20, y_ - 15);
+        ctx.lineTo(x_ +  0, y_ - 30);
+        ctx.lineTo(x_ + 20, y_ - 15);
+        ctx.lineTo(x_ + 20, y_ + 15);
+        ctx.lineTo(x_ +  0, y_ + 30);
+        ctx.lineTo(x_ - 20, y_ + 15);
+        ctx.fill();
+
+        ctx.font = '14pt Calibri';
+        ctx.fillStyle = 'black';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        var s = "Boss";
+        ctx.fillText(s, x_, y_);
+
+    }
+
+    this.isHit = function (x, y, r) {
+        var dx = x_ - x;
+        var dy = y_ - y;
+        var br = r;
+        if (dx*dx + dy*dy < (range_ + r)*(range_ + r)) {
+            console.log('boss::isHit');
+            //isActive_ = false;
+
+            return true;
+        }
+    }
+
+    this.damage = function() {
+        if(--life <= 0) {
+            // game clear !!
+        }
+
+    }
+
+}
+
 function Item(canvas) {
 
     var isActive_ = true;
 
     var x_, y_;
-    var vy;
+    var vy_;
+    var time_;
 
-    var range = 20;
-
-    var time;
+    var range_ = 20;
 
     function spawn() {
         x_ = canvas.width*Math.random();
-        y_ = -range;
-        vy = random_range(1, 4);
-        time = random_range(10, 30);
+        y_ = -range_;
+        vy_ = random_range(1, 4);
+        time_ = random_range(10, 30);
     };
     spawn();
 
     this.draw = function(ctx) {
         ctx.beginPath();
         ctx.fillStyle = 'rgb(128, 255, 128)';
-        ctx.arc(x_, y_, range, 0, Math.PI*2, false);
+        ctx.arc(x_, y_, range_, 0, Math.PI*2, false);
         ctx.fill();
 
         ctx.font = '14pt Calibri';
@@ -148,7 +195,7 @@ function Item(canvas) {
     }
 
     this.update = function() {
-        y_ += vy;
+        y_ += vy_;
     }
 
     this.isActive = function() {
@@ -159,9 +206,9 @@ function Item(canvas) {
         var dx = x_ - x;
         var dy = y_ - y;
         var br = r;
-        if (dx*dx + dy*dy < (range + r)*(range + r)) {
+        if (dx*dx + dy*dy < (range_ + r)*(range_ + r)) {
             isActive_ = false;
-            barrierCount -= time;
+            barrierCount -= time_;
 
             return true;
         }
@@ -189,7 +236,6 @@ function Enemy(canvas) {
     var frame;
     var fire_term;
 
-// 外から見えない
     function spawn() {
         x = canvas.width*Math.random();
         y = -er;
@@ -202,16 +248,11 @@ function Enemy(canvas) {
     };
     spawn();
 
-// 外では使えないので、this.lifeProp
     var lifeProp = [];
     lifeProp[3] = { color: 'white',  fireP: 0.001, numB:  4, daze: 0 };
     lifeProp[2] = { color: 'yellow', fireP: 0.005, numB:  9, daze: 0.5 };
     lifeProp[1] = { color: 'red',    fireP: 0.01,  numB: 15, daze: 1 };
 
-// プロトタイプと言うのも存在する
-//
-// 外からも見える
-// クロージャ
     this.draw = function(ctx) {
 
         if (dying) {
@@ -240,7 +281,6 @@ function Enemy(canvas) {
         var num = lifeProp[life].numB;
 
         var type = random_range(0, 3);
-//        type = 3;
 
         if(type == 0) {
             CircleBullet(bullets, num, x, y, /*r*/5, /*w*/250, /*h*/125);
@@ -256,7 +296,6 @@ function Enemy(canvas) {
             var vx = (myX - x) / spd;
             var vy = (myY - y) / spd;
             bullets.push(CreateBullet(x, y, vx, vy, /*r*/15));
-//            bullets.push(CreateBullet(x, y, -vx, -vy, /*r*/15));
         }
 
         playSE(enemyShotAudio);
@@ -405,7 +444,8 @@ window.onload = function() {
     var h = canvas.height;
 
     var Status = { title:0, toStart:1, countDown:2,
-                   inGame:3, gameClear:4, dying:5, gameOver:6 };
+                   inGame:3, gameClear:4, dying:5, gameOver:6,
+                   inBoss:7};
     var status = Status.title;
 
     var count;
@@ -413,7 +453,7 @@ window.onload = function() {
     var explode = new Explode();
     var numEnemies;
 
-    FirstNextBr = 1000; // debug
+    boss = new Boss(canvas);
 
 // バリア時 -> bonus
 
@@ -474,6 +514,7 @@ window.onload = function() {
         var drawStatus = false;
         var drawScoreObj = false;
         var drawItem = false;
+        var drawBoss = false;
 
         switch (status) {
         case Status.title:
@@ -495,7 +536,7 @@ window.onload = function() {
             (function() {
                 setTimeout(function loop() {
                     if (--count < 0) {
-                        status = Status.inGame;
+                        status = Status.inBoss;
                     } else {
                         setTimeout(loop, 1000);
                     }
@@ -540,6 +581,13 @@ window.onload = function() {
             drawScoreObj = true;
             drawStatus = true;
             drawItem = true;
+            break;
+        case Status.inBoss:
+            drawScoreObj = true;
+            drawPlayer = true;
+            drawStatus = true;
+            drawItem = true;
+            drawBoss = true;
             break;
         default:
             console.log('unknown status: ' + status);
@@ -598,7 +646,7 @@ window.onload = function() {
 // barrier
         if (isBarrier) {
 
-            if(++itemFrame % 30 == 0 && status == Status.inGame) {
+            if(++itemFrame % 45 == 0 && status == Status.inGame) {
                 items.push(new Item(canvas));
             }
 
@@ -610,6 +658,7 @@ window.onload = function() {
             }
         }
 
+// enemy update, draw
         drawEnemies && enemies.forEach(function(enemy) {
             enemy.update();
             if (enemy.isAlive()) {
@@ -635,6 +684,13 @@ window.onload = function() {
                 playSE(deadAudio);
             }
         });
+
+// boss
+        if(drawBoss) {
+            boss.update();
+            boss.draw(ctx);
+            boss.isHit(myX, myY, myR);
+        }
 
 // player draw
         if (drawPlayer) {
@@ -675,7 +731,7 @@ window.onload = function() {
             }
         });
 
-
+// item
         if(drawItem) {
             items.forEach(function(item) {
                 item.update();
@@ -698,12 +754,6 @@ window.onload = function() {
             scoreObj = scoreObj.filter(function(score) {
                 return score.isActive();
             });
-
-//            var num = scoreObj.filter(function(score) {
-//                return score.isActive();
-//            }).length;
-//            console.log('score obj num: ' + num);
-//            console.log('score obj num: ' + scoreObj.length); // filterかけないと、ずっと残る
         }
 
         if(!isBarrier) {
@@ -728,8 +778,12 @@ window.onload = function() {
             if (status == Status.inGame && remainingEnemies <= 0) {
                 status = Status.gameClear;
                 muteSE = true;
-                numEnemies++;
+                //numEnemies++;
+                if(++numEnemies >= 7) {
+                    status = Status.inBoss;
+                }
             }
+
             ctx.font = '20pt Calibri';
             ctx.fillStyle = 'white';
             ctx.textAlign = 'right';

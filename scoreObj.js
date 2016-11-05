@@ -1,4 +1,4 @@
-function ScoreObj(score, x, y)
+function ScoreObj(score_, x_, y_)
 {
     var life_ = 30;
     var size_ = 20;
@@ -12,12 +12,12 @@ function ScoreObj(score, x, y)
         ctx.fillStyle = 'white';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        ctx.fillText(score, x, y);
+        ctx.fillText(score_, x_, y_);
     }
 
     this.update = function() {
         --life_;
-        y -= 0.25;
+        y_ -= 0.25;
         size_ = 10 + (life_ / 30) * 10;
     }
 
