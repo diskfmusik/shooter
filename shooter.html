@@ -536,7 +536,8 @@ window.onload = function() {
             (function() {
                 setTimeout(function loop() {
                     if (--count < 0) {
-                        status = Status.inBoss;
+                        status = Status.inGame;
+                        //status = Status.inBoss;
                     } else {
                         setTimeout(loop, 1000);
                     }
