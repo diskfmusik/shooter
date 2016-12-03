@@ -80,7 +80,7 @@ var boss;
 
 var itemFrame = 0;
 
-var FirstNextBr = 9000;
+var FirstNextBr = 1000;
 var BarrierTime = 5; // (sec)
 
 var isBarrier = false;
@@ -89,6 +89,8 @@ var barrierCount = 0;
 
 // 終着点 -> boss ?
 // 7ぐらいまで行ったら、ボスを出す
+
+// あとちょっと... の気持ち
 
 //---------------------------------------------------------
 //
@@ -115,7 +117,7 @@ function Boss(canvas) {
     var y_ = 150;
 
     var range_ = 25;
-    var life = 3;
+    var life_ = 3;
 
     this.update = function() {
 
@@ -154,7 +156,7 @@ function Boss(canvas) {
     }
 
     this.damage = function() {
-        if(--life <= 0) {
+        if(--life_ <= 0) {
             // game clear !!
         }
 
@@ -657,6 +659,7 @@ window.onload = function() {
                 ctx.arc(myX, myY, barrierR, 0, Math.PI*2, false);
                 ctx.fill();
             }
+
         }
 
 // enemy update, draw
